@@ -1,22 +1,21 @@
-
 ## A Beginner's Guide to Batching
 When I say beginner, I really mean it. I am a beginner myself, and this guide is written specifically with the things I wish I'd known before I started in mind. What I seek to do with this guide is to lay out the basic principles of a batcher, the tools available, and some of the common pitfalls to avoid.
 ### Glossary of Terms
 There's a lot of jargon that gets thrown around that can be confusing to beginners, so I'll try to define some of the commonly used terms here.
 
 - **Prep/Prepped**: A server is "prepped" when its security as at the minimum and it's money is at the maximum. This is the ideal state for hacking.
-- **Operation**: A Hack, Grow, or Weaken command run through a script. Generally shortened to H/G/W.
- - **Batch**: A "batch" is a series of H/G/W operations running in parallel such that they will end in a specific order right after each other, returning the server back to a prepped state when they resolve.
+- **task**: A Hack, Grow, or Weaken command run through a script. Generally shortened to H/G/W.
+ - **Batch**: A "batch" is a series of H/G/W tasks running in parallel such that they will end in a specific order right after each other, returning the server back to a prepped state when they resolve.
  - **HGW**: A batch that consists of a Hack, followed by a Grow, and then finally a Weaken. This type of batch is faster to complete and less error prone, but requires more RAM and very particular calculations (requiring either Formulas.exe or very inefficient overestimations).
  - **HWGW**: The most common type of batch. Consists of a Hack, then a Weaken, then a Grow, then finally a second Weaken to bring the server back to a prepped state. This guide will focus almost exclusively on HWGW.
  - **Program/Script**: My own distinction: A script is a single .js file, while a program may involve several scripts working together.
  - **Proto-batcher**: A program which runs one batch at a time, waiting for it to finish before launching another.
- - **Batcher**: A program which runs several batches in parallel, ideally running a constant stream of operations with fixed intervals between them for an indefinite period of time. This is what we're here for.
+ - **Batcher**: A program which runs several batches in parallel, ideally running a constant stream of tasks with fixed intervals between them for an indefinite period of time. This is what we're here for.
  - **Controller**: A script that's responsible for managing other scripts. The "brain" of a batcher.
- - **Worker**: A script that performs H/G/W operations. You generally want these as lean as possible, ideally costing no more ram than the base cost plus the cost of the operation.
- - **Desync**: When something causes the H/G/W operations to either happen out of order or fail to perform correctly, the batcher is "desynced."
- - **Collision**: A specific kind of desync caused by an operation starting when another one ends, leading to unpredictable server conditions and potential desync.
- - **Collision Wall**: A bit outdated, but I'll mention it here anyway. The collision wall is the point at which the environment is so saturated by operations that collisions are almost guaranteed without very precisely controlled operation start/end times.
+ - **Worker**: A script that performs H/G/W tasks. You generally want these as lean as possible, ideally costing no more ram than the base cost plus the cost of the task.
+ - **Desync**: When something causes the H/G/W tasks to either happen out of order or fail to perform correctly, the batcher is "desynced."
+ - **Collision**: A specific kind of desync caused by an task starting when another one ends, leading to unpredictable server conditions and potential desync.
+ - **Collision Wall**: A bit outdated, but I'll mention it here anyway. The collision wall is the point at which the environment is so saturated by tasks that collisions are almost guaranteed without very precisely controlled task start/end times.
  - **Overestimation**: Another me-specific term. When I say this, I'm referring to intentionally padding thread counts beyond the minimum necessary, usually as protection against desyncs.
  - **Port**: Not to be confused with the ports that need to be opened to gain root access on servers, netscript ports are a special tool that allows active scripts to communicate with each other. More on this later.
  - **Shotgun**: A scheduling method that runs every single batch at once. Very RAM intensive. Can trigger the infinite loop protection if you aren't careful. Basically a proto-batcher on steroids.
@@ -47,7 +46,7 @@ For the purposes of this game, a depth-first recursive algorithm is probably the
 
 Without formulas, a common de facto algorithm (credit to discord user xsinx) for finding the best server to target is to pare the list down to only servers with a hacking requirement of half your level, then divide their max money by the time it takes to weaken it once. Pick whichever server scores highest. (For a fully functional batcher, you don't need to do that division, but if you had one of those you wouldn't be reading this.)
 
-When allocating RAM, you might be tempted to distribute an operation with very high thread counts across multiple servers. **Don't**. This will cause your batcher to underperform due to security increases and throw off your calculations, causing desyncs. Make sure each operation in a batch fits on a single server (you can distribute the batch across different servers, though). Note: Technically this doesn't apply to weaken, but it tends to have the lowest thread counts anyway, and it could mess up timing. Don't tempt fate.
+When allocating RAM, you might be tempted to distribute an task with very high thread counts across multiple servers. **Don't**. This will cause your batcher to underperform due to security increases and throw off your calculations, causing desyncs. Make sure each task in a batch fits on a single server (you can distribute the batch across different servers, though). Note: Technically this doesn't apply to weaken, but it tends to have the lowest thread counts anyway, and it could mess up timing. Don't tempt fate.
 
 ### What's the deal with Formulas?
 Formulas.exe, aka the formulas API, is a powerful tool that allows you to do calculations with player and server objects (among a variety of other things that aren't relevant to this guide). **None of these functions are necessary for making a batcher.** Whether it's threadcounts, timing, desyncs, or even keeping your batcher running after a levelup happens, you do not *need* formulas.
@@ -55,18 +54,21 @@ Formulas.exe, aka the formulas API, is a powerful tool that allows you to do cal
 - Finding a target: You can use formulas to check how long a weaken would take without having to prep it first.
 - HGW: Calculating how many grow threads are needed after a hack without weakening first is tricky without formulas, and requires major overestimation otherwise.
 - Seamless level transitions: A fancy optimization that recalculates thread counts in advance of a level up without overestimation.
-- Unit testing: Want to check your math? With formulas you can set up simulated environments to test functions without having to wait for operation times. Very useful for quickly debugging potential problems and checking your logic. Not useful for timing/scheduling, unfortunately.
+- Unit testing: Want to check your math? With formulas you can set up simulated environments to test functions without having to wait for task times. Very useful for quickly debugging potential problems and checking your logic. Not useful for timing/scheduling, unfortunately.
 - More accurate calculation for Grow threads (more on that in the next section).
 
 ### Tools of the trade
 There are a lot of functions that go into making a good batcher, many of which you have to write yourself, but I'll cover the most important prefab functions here:
 
+*Note: All non-formulas functions use the state of the player and server at the moment of the function call. Any applicable multipliers are automatically factored in.*
 #### Timing functions:
 
     ns.getHackTime(server);
     ns.getGrowTime(server);
     ns.getWeakenTime(server);
-These functions will give you the amount of time in milliseconds it will take to complete a given operation on the server provided by the argument. It uses the current state of both the player and server at the time when the function is called, so make sure you prep your servers before calculating.
+These functions will give you the amount of time in milliseconds it will take to complete a given task on the server provided by the argument. It uses the current state of both the player and server at the time when the function is called, so make sure you prep your servers before calculating.
+
+Strictly speaking, you only actually need to use one of these, as their times are always consistent relative to each other. At the time of writing, the ratios between them are 1 weaken = 4 hacks = 3.2 grows.
 
     Date.now();
     performance.now();
@@ -83,9 +85,9 @@ Some examples of ways to use the timing functions.
 These are functions used to wait for a period of time before executing more code. Sleep is simple enough, you just wait for a predefined number of milliseconds. I'll cover nextWrite in more detail when I talk about ports.
 
     await  ns.grow(server,  {additionalMsec:  ms});
-The key aspect here is `additionalMsec`. The H/G/W functions can take an extra optional argument called "opts" which has three special options that modify the behavior. It has to be a dictionary (hence the {} braces surrounding the argument) and the options are `additionalMsec`, `stock`, and `threads`. We'll ignore `stock` for now and just look at the other two. `threads` lets you tell the operation to use fewer threads than the script running it. What for? I don't know. Moving on. `additionalMsec` lets you add a number of milliseconds as a delay, forcing the operation to take that much longer.
+The key aspect here is `additionalMsec`. The H/G/W functions can take an extra optional argument called "opts" which has three special options that modify the behavior. It has to be a dictionary (hence the {} braces surrounding the argument) and the options are `additionalMsec`, `stock`, and `threads`. We'll ignore `stock` for now and just look at the other two. `threads` lets you tell the task to use fewer threads than the script running it. What for? I don't know. Moving on. `additionalMsec` lets you add a number of milliseconds as a delay, forcing the task to take that much longer.
 
-This has two advantages: First, additionalMsec is much more accurate than sleep, I won't get into why since it involves some of the deeper code stuff that defines game behavior, but just take my word for it. Second, it means that it will use the state of the server the moment the script is run, instead of checking after sleeping for a delay. This is *huge* for avoiding collisions, as it gives you much finer control over when an operation starts and ends.
+This has two advantages: First, additionalMsec is much more predictable than sleep, I won't get into why since it involves some of the deeper code stuff that defines game behavior, but just take my word for it. Second, it means that it will use the state of the server the moment the script is run, instead of checking after sleeping for a delay. This is *huge* for avoiding collisions, as it gives you much finer control over when an task starts and ends.
 #### Thread functions
 
     ns.hackAnalyze(target);
@@ -96,7 +98,7 @@ From the top:
 - hackAnalyzeThreads gives you the number of threads required to steal a *specific* amount of money from the server.
 - growthAnalyze is the most complicated of the lot, and returns the approximate number of threads it would take to multiply the money in the server by the given value. For example, if you give it 2, then it tells you how many threads it takes to double the money on the server, 3 for triple, and so on.
 
-You'll note that I said "approximate." That's probably throwing up some red flags, so I'll explain: growthAnalyze has some eccentricities. Each grow operation actually adds $1 per thread and *then* multiplies, and since the server will be at max money when we do the calculations, this can result in underestimated thread counts if the server funds get extremely low. For practical purposes, this is almost always going to be good enough, but if you want better accuracy, there is an alternative in the Formulas API:
+You'll note that I said "approximate." That's probably throwing up some red flags, so I'll explain: growthAnalyze has some eccentricities. Each grow task actually adds $1 per thread and *then* multiplies, and since the server will be at max money when we do the calculations, this can result in underestimated thread counts if the server funds get extremely low. For practical purposes, this is almost always going to be good enough, but if you want better accuracy, there is an alternative in the Formulas API:
 
     ns.formulas.hacking.growThreads(server, player, targetValue);
 This function will give you the number of threads required to take a server from its current value up to a target (usually its moneyMax value). This is much better, but requires some setup (and formulas), it takes a server object, not a hostname, which you can get from `ns.getServer(hostname)` and a player object `ns.getPlayer()`. You'll need to make sure that the simulated server has its funds set to the exact amount that you expect a hack to put it to (not just the amount you're *trying* to take.
@@ -113,6 +115,10 @@ That's it. It's all flat values. One weaken will counteract 25 hacks or 12.5 gro
     ns.hackAnalyzeSecurity(threads, target);
     ns.growthAnalyzeSecurity(threads, target);
 It's a waste of RAM to use them, but I've included them here for completeness and because that waste really is trivial.
+
+    weakenAnalyze(threads, cores);
+Okay, so actually there is a special case. When running weaken from your home console, the effectiveness is improved by cores. In that case, you'll want to use this to determine the number of threads, but just remember that you should only factor in cores if you *know* that your tasks are going to be executed there.
+
 #### Formulas functions
 While it's not strictly necessary, Formulas.exe *is* incredibly powerful, and so I'll take a moment to quickly go over the most relevant functions and what they can do for you. Aside from the `growThreads` already mentioned there's:
 
@@ -128,7 +134,7 @@ An important addition to these is the SkillsFormulas interface, which consists o
 
     calculateExp(skill, skillMult);
     calculateSkill(exp, skillMult);
-These can be used to calculate what skill level a certain amount of exp is worth, and how much exp is required to reach a skill respectively. Note that the `calculateExp` function actually returns one exp less than the exact amount required to reach a level due to a rounding error. These are integral for smooth and efficient solutions to leveling up during a batcher's operation. There are non-formulas ways to deal with it, but they generally involve overestimation and/or damage control.
+These can be used to calculate what skill level a certain amount of exp is worth, and how much exp is required to reach a skill respectively. Note that the `calculateExp` function actually returns one exp less than the exact amount required to reach a level due to a rounding error. These are integral for smooth and efficient solutions to leveling up during a batcher's task. There are non-formulas ways to deal with it, but they generally involve overestimation and/or damage control.
 #### Ports
 It's usually a good idea to have your controller and workers communicate with each other, and ports are the way to do it. A port is created with the function
 
@@ -153,7 +159,7 @@ In addition, there are a few more useful functions for handling ports:
     port.nextWrite();
 `empty` and `full` are simple enough—they just check if the port is empty or full respectively. `clear` empties the entire queue, and it's generally good practice to have your controller script do this when it starts up, as ports are not emptied when the scripts that create them die.
 
-`nextWrite` is where the magic happens. Due to some javascript arcana that I do not personally understand well enough to get into, `nextWrite` guarantees that the code which writes to the port will *immediately* be followed by the execution of the code which is waiting on it to be written to. This is extremely useful for timing purposes compared to `sleep`, which could allow any number of processes to be inserted between writing to and reading from the port.
+`nextWrite` is where the magic happens. Due to some javascript arcana that I do not personally understand well enough to get into, `nextWrite` guarantees that the code listening to the port will go next after the code that writes to it. This is extremely useful for timing purposes compared to `sleep`, which could allow any number of processes to be inserted between writing to and reading from the port.
 
 There are some limitations. Ports can only traffic numbers and strings, they can only hold a certain number of values at a time (controlled by an in-game setting), and each one must have a unique identifier, which can make things difficult if you want to run multiple scripts each using multiple ports without risk of collision. Most of these you just have to live with, but one is actually very easily solved.
 
@@ -174,9 +180,9 @@ To begin, let's talk about the anatomy of a controller and a worker. The control
 
 **The controller** needs to be able to spawn workers. It needs to know when workers are supposed to spawn, how many threads to run them with, and in what order.
 
-**The workers**, aside from the obvious task of running their designated operations, should also be able to start with a delay, either through sleep or additionalMsec. At this point, I'm going to highly recommend some sort of communal logging system that all workers can write to. A monitor script or a txt log file are both valid options for this.
+**The workers**, aside from the obvious job of running their designated tasks, should also be able to start with a delay, either through sleep or additionalMsec. At this point, I'm going to highly recommend some sort of communal logging system that all workers can write to. A monitor script or a txt log file are both valid options for this.
 
-Some important notes to consider: H/G/W operations calculate their effects when they finish.
+Some important notes to consider: H/G/W tasks calculate their effects when they finish.
 
 Let's consider this step passed when you can write a script that consistently deploys a HWGW batch such that each job finishes in the correct order and within 20ms of each other and successfully returns the server to a prepped state. Establishing how you *know* you've passed is a crucial part of this step, and should not be overlooked.
 
@@ -192,9 +198,9 @@ You might have guessed from the header, but I'm going to highly recommend gettin
 Second, as mentioned in the earlier section discussing `nextWrite`, it gives us much more precise timing control over what happens when a script finishes. Also, good communication between controller and workers will make it much easier in the future for you to detect and troubleshoot errors.
 
 Your goals for this step are:
-1) Tighten the gap between operations to only 5ms.
+1) Tighten the gap between tasks to only 5ms.
 2) Start a new batch within 5ms of the previous one
-3) Have your operations ending within 1-2ms of when they are supposed to.
+3) Have your tasks ending within 1-2ms of when they are supposed to.
 4) Automatically recalculate threads and timing after a level up.
 
 (Note: If you've got a slower computer, you can raise the gap 10 or 20ms, but it really should be quite easy. Landing times are non-negotiable, since I've literally told you exactly how to do that, and it shouldn't be impacted by performance.)
@@ -236,11 +242,11 @@ First, let's talk a bit about the different design architectures for continuous 
 #### Periodic
 A term coined by discord user stalefish, who wrote an incredible algorithm that calculated a safe window where an entire batch of workers could be deployed without causing any collision. This was before `additionalMsec` and `nextWrite` were available, and workers had to rely on sleep for their delays. Nowadays, his algorithm isn't so useful, but the principles behind it still apply.
 
-The logic is essentially this: you want to deploy batches periodically, at a set interval which has been calculated to always be safe. Even with `additionalMsec`, stalefish's algorithm still works, and you can actually modify it by trimming out a lot of the accommodations it made for the different durations of H/G/W operations. If the timing is good for a weaken, it's good for the rest of them too thanks to `additionalMsec`.
+The logic is essentially this: you want to deploy batches periodically, at a set interval which has been calculated to always be safe. Even with `additionalMsec`, stalefish's algorithm still works, and you can actually modify it by trimming out a lot of the accommodations it made for the different durations of H/G/W tasks. If the timing is good for a weaken, it's good for the rest of them too thanks to `additionalMsec`.
 
-But thanks to `nextWrite` you don't even have to do that. We have a way to know *exactly* when it's safe to deploy a new batch: whenever a worker carrying a weaken operation finishes! Well, whenever *one* of the weakens finishes. If you deployed every time either of them finished, you'd end up with too many simultaneous batches and cause collisions.
+But thanks to `nextWrite` you don't even have to do that. We have a way to know *exactly* when it's safe to deploy a new batch: whenever a worker carrying a weaken task finishes! Well, whenever *one* of the weakens finishes. If you deployed every time either of them finished, you'd end up with too many simultaneous batches and cause collisions.
 
-Generally, you can expect to be able to run a number of parallel batches (or depth) based on the space between operations, and the time it takes to perform a weaken operation: `weakenTime / (4 * spacer) = depth`
+Generally, you can expect to be able to run a number of parallel batches (or depth) based on the space between tasks, and the time it takes to perform a weaken task: `weakenTime / (4 * spacer) = depth`
 
 Once you have that, it's just a matter of seeding the initial queue and then keeping the whole thing running. If you've followed up to this point, I should even have to tell you what's required from your workers and controllers, but I'll write it down for old-times sake:
 
