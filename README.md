@@ -4,7 +4,7 @@ When I say beginner, I really mean it. I am a beginner myself, and this guide is
 There's a lot of jargon that gets thrown around that can be confusing to beginners, so I'll try to define some of the commonly used terms here.
 
 - **Prep/Prepped**: A server is "prepped" when its security as at the minimum and it's money is at the maximum. This is the ideal state for hacking.
-- **task**: A Hack, Grow, or Weaken command run through a script. Generally shortened to H/G/W.
+- **Task**: A Hack, Grow, or Weaken command run through a script. Generally shortened to H/G/W.
  - **Batch**: A "batch" is a series of H/G/W tasks running in parallel such that they will end in a specific order right after each other, returning the server back to a prepped state when they resolve.
  - **HGW**: A batch that consists of a Hack, followed by a Grow, and then finally a Weaken. This type of batch is faster to complete and less error prone, but requires more RAM and very particular calculations (requiring either Formulas.exe or very inefficient overestimations).
  - **HWGW**: The most common type of batch. Consists of a Hack, then a Weaken, then a Grow, then finally a second Weaken to bring the server back to a prepped state. This guide will focus almost exclusively on HWGW.
