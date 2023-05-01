@@ -182,7 +182,7 @@ To begin, let's talk about the anatomy of a controller and a worker. The control
 
 **The workers**, aside from the obvious job of running their designated tasks, should also be able to start with a delay, either through sleep or additionalMsec. At this point, I'm going to highly recommend some sort of communal logging system that all workers can write to. A monitor script or a txt log file are both valid options for this.
 
-Some important notes to consider: H/G/W tasks calculate their effects when they finish.
+Remember: H/G/W tasks calculate their effects when they finish.
 
 Let's consider this step passed when you can write a script that consistently deploys a HWGW batch such that each job finishes in the correct order and within 20ms of each other and successfully returns the server to a prepped state. Establishing how you *know* you've passed is a crucial part of this step, and should not be overlooked.
 
