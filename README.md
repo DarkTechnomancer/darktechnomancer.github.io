@@ -172,7 +172,7 @@ These functions allow you to encode an object into a specially formatted string,
 ### Putting it all together (AKA the good part)
 This is the part you're really here for. Let's be honest, you either skimmed everything up to this point or just scrolled down and skipped it entirely, but that's fine. If you get stuck, you may find some useful answers above, but for now, let's talk about what an actual batcher looks like, and how to build one.
 
-We're going to start small, and gradually work our way up. Most of this is going to be plain language or pseudocode rather than actual code snippets. If you're here to copy a script out of the box, look elsewhere, but if you're interested in actually understanding the principles behind it and solving the ever-expanding puzzle of making that number go up for yourself, then read on.
+We're going to start small, and gradually work our way up. Most of this is going to be plain language or pseudocode rather than actual code snippets. If you're here to copy a script out of the box, look elsewhere, but if you're interested in actually understanding the principles behind it and solving the ever-expanding puzzle of making that number go up for yourself, then read on. That said, I will be expanding this page with code examples for each part later.
 #### Baby Steps: Making an actual batch
 That's batch. Singular. We need to walk before we can run, but don't worry—even the first few steps of this process will leave you with scripts far more efficient than the basic hacking template from the tutorial.
 
