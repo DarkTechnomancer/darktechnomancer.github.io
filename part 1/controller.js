@@ -64,9 +64,9 @@ export async function main(ns) {
 	where we can to save on RAM.
 	*/
 	const tAmount = maxMoney * greed;
-	const hThreads = Math.min(Math.floor(ns.hackAnalyzeThreads(values.target, tAmount)), Math.floor(ramNet.slice(-2)[0].ram / 1.7));
-	const wThreads1 = Math.ceil(hThreads * 0.002 / 0.05);
-	const wThreads2 = Math.ceil(gThreads * 0.004 / 0.05);
+	const hThreads = Math.max(Math.min(Math.floor(ns.hackAnalyzeThreads(values.target, tAmount)), Math.floor(ramNet.slice(-2)[0].ram / 1.7)), 1);
+	const wThreads1 = Math.max(Math.ceil(hThreads * 0.002 / 0.05), 1);
+	const wThreads2 = Math.max(Math.ceil(gThreads * 0.004 / 0.05), 1);
 	const wTime = Math.ceil(ns.getWeakenTime(values.target));
 	const hTime = Math.ceil(wTime / 4);
 	const gTime = Math.ceil(hTime * 3.2);
@@ -104,7 +104,7 @@ export async function main(ns) {
 	This does nothing for now, but it's a good idea to get into the habit of reinitializing the RAM when we're done with it.
 	Later, we'll probably need a more sophisticated way of managing it, but this will suffice for now.
 	*/
-	for (block of ramNet) block.used = false;
+	for (const block of ramNet) block.used = false;
 }
 
 /*
