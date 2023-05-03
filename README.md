@@ -108,6 +108,7 @@ From the top:
 You'll note that I said "approximate." That's probably throwing up some red flags, so I'll explain: growthAnalyze has some eccentricities. Each grow task actually adds $1 per thread and *then* multiplies, and since the server will be at max money when we do the calculations, this can result in underestimated thread counts if the server funds get extremely low. For practical purposes, this is almost always going to be good enough, but if you want better accuracy, there is an alternative in the Formulas API:
 
     ns.formulas.hacking.growThreads(server, player, targetValue);
+    
 This function will give you the number of threads required to take a server from its current value up to a target (usually its moneyMax value). This is much better, but requires some setup (and formulas), it takes a server object, not a hostname, which you can get from `ns.getServer(hostname)` and a player object `ns.getPlayer()`. You'll need to make sure that the simulated server has its funds set to the exact amount that you expect a hack to put it to (not just the amount you're *trying* to take.
 
 That brings me to the `hackAnalyze` and `hackAnalyzeThreads` functions. When you run `hackAnalyzeThreads` it will give you the decimal-accurate number of threads required to steal that much money, but you can only assign an integer number of threads to a job. Generally, you can just floor the value and use it as is, but if you want to be more precise, you can then run that number through `hackAnalyze` to get the true value that you're stealing from the server.
