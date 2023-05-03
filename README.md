@@ -262,7 +262,7 @@ Based on the lessons so far, it should be pretty easy. A shotgun batcher is like
 
 The logic is pretty simple:
 
-**The controller**, must figure out how big of a super-batch it fit into the available ram on the network, then deploy the entire thing in one go. Once the super-batch is finished, check on the server and either re-prep or fire off another blast.
+**The controller**, must figure out how big of a super-batch it can fit into the available ram on the network, then deploy the entire thing in one go. Once the super-batch is finished, check on the server and either re-prep or fire off another blast.
 
 **The worker,** still needs to know when it's supposed to end. Since we're dropping everything at once, it's very important that we don't mess up the synchronization. One advantage is that as long as the end times are accurate, lag delays will delay the entire batch equally, so things will always land in the right order, provided they were already going to. We also need to make sure that the last worker knows that it's the last one and can communicate back to the controller that it's finished. Don't rely on sleeps for this, since delays are quite likely on batches this large.
 
