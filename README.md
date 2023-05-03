@@ -45,7 +45,7 @@ For the most part, these things are beyond the scope of this guide. I'll leave i
 
 For the purposes of this game, a depth-first recursive algorithm is probably the best way to traverse the server list. If you don't know what that means, just look it up, it's not too difficult.
 
-Without formulas, a common de facto algorithm (credit to discord user xsinx) for finding the best server to target is to pare the list down to only servers with a hacking requirement of half your level, then divide their max money by the time it takes to weaken it once. Pick whichever server scores highest. (For a fully functional batcher, you don't need to do that division, but if you had one of those you wouldn't be reading this.)
+Without formulas, a common de facto algorithm (credit to discord user xsinx) for finding the best server to target is to pare the list down to only servers with a hacking requirement of half your level, then divide their max money by the minimum security level. Pick whichever server scores highest. (For a fully functional batcher, you don't need to do that division, but if you had one of those you wouldn't be reading this.)
 
 When allocating RAM, you might be tempted to distribute an task with very high thread counts across multiple servers. **Don't**. This will cause your batcher to underperform due to security increases and throw off your calculations, causing desyncs. Make sure each task in a batch fits on a single server (you can distribute the batch across different servers, though). Note: Technically this doesn't apply to weaken, but it tends to have the lowest thread counts anyway, and it could mess up timing. Don't tempt fate.
 
