@@ -1,3 +1,4 @@
+
 ## A Beginner's Guide to Batching
 When I say beginner, I really mean it. I am a beginner myself, and this guide is written specifically with the things I wish I'd known before I started in mind. What I seek to do with this guide is to lay out the basic principles of a batcher, the tools available, and some of the common pitfalls to avoid.
 ### Glossary of Terms
@@ -201,6 +202,8 @@ Remember: H/G/W tasks calculate their effects when they finish.
 
 Let's consider this step passed when you can write a script that consistently deploys a HWGW batch such that each job finishes in the correct order and within 20ms of each other and successfully returns the server to a prepped state. Establishing how you *know* you've passed is a crucial part of this step, and should not be overlooked.
 
+You can find commented code examples of this step in [Part 1](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%201:%20A%20Batch) but I highly encourage you to try figuring it out on your own.
+
 #### Communication: Making your first proto-batcher
 This is an even smaller step than the last one, but no less important. Now that you're able to deploy a batch, you're going to want to continuously deploy batches. This requires some extra functionality from our program:
 
@@ -219,6 +222,8 @@ Your goals for this step are:
 4) Automatically recalculate threads and timing after a level up.
 
 (Note: If you've got a slower computer, you can raise the gap 10 or 20ms, but it really should be quite easy. Landing times are non-negotiable, since I've literally told you exactly how to do that, and it shouldn't be impacted by performance.)
+
+Code examples: [Part 2](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%202:%20Proto-Batcher)
 
 #### Branching Out: Don't let perfect get in the way of good enough
 At this point, you can strongly consider just moving on. Batching is a cool problem, but it's not a necessity. It's only one part of a much bigger game. A proto-batcher is already quite good, and while you could spend hours, days, or weeks fine-tuning it into the perfect money-printing machine, you could also just point it at the top 10-20 servers and have it loot 50% of their funds at a time on an infinite loop and just call it good.
