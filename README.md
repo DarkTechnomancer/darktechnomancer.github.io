@@ -66,6 +66,7 @@ There are a lot of functions that go into making a good batcher, many of which y
     ns.getHackTime(server);
     ns.getGrowTime(server);
     ns.getWeakenTime(server);
+    
 These functions will give you the amount of time in milliseconds it will take to complete a given task on the server provided by the argument. It uses the current state of both the player and server at the time when the function is called, so make sure you prep your servers before calculating.
 
 Strictly speaking, you only actually need to use one of these, as their times are always consistent relative to each other. At the time of writing, the ratios between them are 1 weaken = 4 hacks = 3.2 grows.
@@ -73,18 +74,22 @@ Strictly speaking, you only actually need to use one of these, as their times ar
     Date.now();
     performance.now();
     ns.getTimeSinceLastAug();
+    
 These functions all give some variation of the current time in milliseconds. I'd recommend against using getTimeSinceLastAug, but the other two are both valid.
 
     const startTime = Date.now();
     const endTime = Date.now() + ns.getWeakenTime();
     timeElapsed = Date.now() - startTime;
+    
 Some examples of ways to use the timing functions.
 
     await sleep(ms);
     await port.nextWrite();
+    
 These are functions used to wait for a period of time before executing more code. Sleep is simple enough, you just wait for a predefined number of milliseconds. I'll cover nextWrite in more detail when I talk about ports.
 
     await  ns.grow(server,  {additionalMsec:  ms});
+    
 The key aspect here is `additionalMsec`. The H/G/W functions can take an extra optional argument called "opts" which has three special options that modify the behavior. It has to be a dictionary (hence the {} braces surrounding the argument) and the options are `additionalMsec`, `stock`, and `threads`. We'll ignore `stock` for now and just look at the other two. `threads` lets you tell the task to use fewer threads than the script running it. What for? I don't know. Moving on. `additionalMsec` lets you add a number of milliseconds as a delay, forcing the task to take that much longer.
 
 This has two advantages: First, additionalMsec is much more predictable than sleep, I won't get into why since it involves some of the deeper code stuff that defines game behavior, but just take my word for it. Second, it means that it will use the state of the server the moment the script is run, instead of checking after sleeping for a delay. This is *huge* for avoiding collisions, as it gives you much finer control over when an task starts and ends.
@@ -93,6 +98,7 @@ This has two advantages: First, additionalMsec is much more predictable than sle
     ns.hackAnalyze(target);
     ns.hackAnalyzeThreads(target, amount);
     ns.growthAnalyze(target, multipier);
+    
 From the top:
 - hackAnalyze gives you the amount of money stolen by a single thread.
 - hackAnalyzeThreads gives you the number of threads required to steal a *specific* amount of money from the server.
@@ -110,13 +116,16 @@ You might have noticed that I never mentioned weaken while talking about threads
     Security increase per hack thread__: 0.002
     Security increase per grow thread__: 0.004
     Security decrease per weaken thread: 0.05
+    
 That's it. It's all flat values. One weaken will counteract 25 hacks or 12.5 grows. However, if you don't feel like doing the arithmetic, there are functions:
 
     ns.hackAnalyzeSecurity(threads, target);
     ns.growthAnalyzeSecurity(threads, target);
+    
 It's a waste of RAM to use them, but I've included them here for completeness and because that waste really is trivial.
 
     weakenAnalyze(threads, cores);
+    
 Okay, so actually there is a special case. When running weaken from your home console, the effectiveness is improved by cores. In that case, you'll want to use this to determine the number of threads, but just remember that you should only factor in cores if you *know* that your tasks are going to be executed there.
 
 #### Formulas functions
@@ -128,17 +137,20 @@ While it's not strictly necessary, Formulas.exe *is* incredibly powerful, and so
     ns.formulas.hacking.hackPercent(server, player);
     ns.formulas.hacking.hackChance(server, player);
     ns.formulas.hacking.hackExp(server, player);
+    
 You'll note that these are all just things that the previous functions could already do. The only difference is that you can tweak the values of the server and player objects to simulate a particular environment. There's also `growPercent` but it's a bit of a weird one, and I don't know how to use it properly, so I'll leave it aside.
 
 An important addition to these is the SkillsFormulas interface, which consists of only two functions, but they are powerful ones:
 
     calculateExp(skill, skillMult);
     calculateSkill(exp, skillMult);
+    
 These can be used to calculate what skill level a certain amount of exp is worth, and how much exp is required to reach a skill respectively. Note that the `calculateExp` function actually returns one exp less than the exact amount required to reach a level due to a rounding error. These are integral for smooth and efficient solutions to leveling up during a batcher's task. There are non-formulas ways to deal with it, but they generally involve overestimation and/or damage control.
 #### Ports
 It's usually a good idea to have your controller and workers communicate with each other, and ports are the way to do it. A port is created with the function
 
     port = ns.getPortHandle(int);
+    
 As far as I know, any integer works and there's no upper bound to how many ports you can have (other than whatever size integer is used to store them). It's up to you how you want to handle them, but I'd recommend unique identifiers. There are a few ways to do this, but the PID of the controller is usually a good start.
 
 Now, how do you actually use the things? Here are the relevant functions:
@@ -147,7 +159,8 @@ Now, how do you actually use the things? Here are the relevant functions:
     port.read();
     port.write(value);
     port.tryWrite(value);
-   `peek` and `read` will get the first (oldest) element in the port, or the string "NULL PORT DATA" if the port is empty. The difference is that `peek` will leave the element in place, while `read` is destructive and will remove the element from the port.
+    
+`peek` and `read` will get the first (oldest) element in the port, or the string "NULL PORT DATA" if the port is empty. The difference is that `peek` will leave the element in place, while `read` is destructive and will remove the element from the port.
    
 `write` and `tryWrite` are essentially the same, except that `tryWrite` will only write to the port if it's not full (the maximum number of elements in a port is a setting in game) while `write` will just shove its value onto the stack, bumping off the oldest element in the process. Note that `write` will actually return the item it displaced, which can be potentially useful, but is beyond the scope of this guide.
 
@@ -157,6 +170,7 @@ In addition, there are a few more useful functions for handling ports:
     port.empty();
     port.full();
     port.nextWrite();
+
 `empty` and `full` are simple enough—they just check if the port is empty or full respectively. `clear` empties the entire queue, and it's generally good practice to have your controller script do this when it starts up, as ports are not emptied when the scripts that create them die.
 
 `nextWrite` is where the magic happens. Due to some javascript arcana that I do not personally understand well enough to get into, `nextWrite` guarantees that the code listening to the port will go next after the code that writes to it. This is extremely useful for timing purposes compared to `sleep`, which could allow any number of processes to be inserted between writing to and reading from the port.
@@ -167,6 +181,7 @@ You can transfer any data object from one script to another using serialization:
 
     JSON.stringify(object);
     JSON.parse(string);
+
 These functions allow you to encode an object into a specially formatted string, transfer it over a port, then decode that string back into an object on the other side. This is very useful for transmitting large quantities of data through a port without clogging it up.
 
 ### Putting it all together (AKA the good part)
