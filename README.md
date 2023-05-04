@@ -16,7 +16,7 @@ When I say beginner, I really mean it. I am a beginner myself, and this guide is
 	* Part 2: [Proto-batcher](#communication-making-your-first-proto-batcher)
 	* Part 2.5: [Branching out](#branching-out-dont-let-perfect-get-in-the-way-of-good-enough)
 	* Part 3: [Shotgun](#so-then-i-started-blasting-the-shotgun-batcher)
-* [Continutous Batchers](#the-final-chapter-continuous-batchers)
+* [Continuous Batchers](#the-final-chapter-continuous-batchers)
 	* Part 4: [Periodic Batcher](#periodic)
 	* Part 5: [JIT Batcher](#jitjust-in-time)
 * [Further Optimization](#now-what-looking-into-the-future)
