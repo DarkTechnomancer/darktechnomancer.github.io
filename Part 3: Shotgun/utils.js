@@ -149,7 +149,11 @@ export async function prep(ns, values) {
 
 			// Allocate as many threads as we can.
 			if (wThreads > 0) {
-				const metrics = { batch: "prep", target: values.target, type: "prepWeaken", time: wTime, end: wEnd, port: 0, log: values.log };
+				const metrics = { batch: "prep", target: values.target, type: "prepWeaken", time: wTime, end: wEnd, 
+						 
+						 
+						 
+						 0, log: values.log };
 				for (const block of ramNet) {
 					if (block.ram / 1.75 >= wThreads && !block.used) {
 						ns.scp("/part3/tWeaken.js", block.server);
@@ -205,8 +209,8 @@ export async function prep(ns, values) {
 			}
 			// Allocate threads if there's room for both.
 			if (gThreads > 0 && wThreads > 0) {
-				const wMetrics = { batch: "prep", target: values.target, type: "prepWeaken", time: wTime, end: wEnd, port: 0 };
-				const gMetrics = { batch: "prep", target: values.target, type: "prepgrow", time: gTime, end: gEnd, port: 0 };
+				const wMetrics = { batch: "prep", target: values.target, type: "prepWeaken", time: wTime, end: wEnd, port: 0, log: values.log };
+				const gMetrics = { batch: "prep", target: values.target, type: "prepgrow", time: gTime, end: gEnd, port: 0, log: values.log };
 				let gFound = false;
 				let wFound = false;
 
