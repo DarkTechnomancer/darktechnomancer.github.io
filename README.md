@@ -1,4 +1,5 @@
 
+  
 ## A Beginner's Guide to Batching
 When I say beginner, I really mean it. I am a beginner myself, and this guide is written specifically with the things I wish I'd known before I started in mind. What I seek to do with this guide is to lay out the basic principles of a batcher, the tools available, and some of the common pitfalls to avoid.
 ### Table of Contents:
@@ -23,6 +24,7 @@ When I say beginner, I really mean it. I am a beginner myself, and this guide is
 * Code examples (external links):
 	* [Part 1](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%201:%20A%20Batch)
 	* [Part 2](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%202:%20Proto-Batcher)
+	* [Part 3](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%203:%20Shotgun)
 
 ### Glossary of Terms
 There's a lot of jargon that gets thrown around that can be confusing to beginners, so I'll try to define some of the commonly used terms here.
@@ -257,6 +259,8 @@ Actually, I take it back. There is a goal for this step: make sure your controll
 
 (Optional): For bonus points, try making a super-controller that controls and coordinates between your controller scripts.
 
+No code examples for this part, but I might work multi-targeting into a later version of the script.
+
 #### So Then I Started Blasting: The shotgun batcher
 Based on the lessons so far, it should be pretty easy. A shotgun batcher is like a proto-batcher's bigger, roided up cousin. Essentially this strategy fills ram up with as many batches as possible against a single target. In fact, if you think about it, shotgun batchers don't actually deploy multiple batches at all, but rather one enormous super-batch. Rather than HWGW, a shotgun batch is HWGWHWGWHWGWHWGWHWGWHWGWHWGW...etc.
 
@@ -276,6 +280,8 @@ Goals:
 1) Fire off a shotgun batch using all available RAM that executes without any timing or security desyncs (running out of money is forgivable in the case of level ups)
 2) Get the controller to redeploy after it hears back from the final worker.
 3) (Optional) Using lessons from the previous step, write a super-controller that manages two servers at once, prepping one while it shotguns the other, then switching between the two as needed for maximum uptime.
+
+Code examples: [Part 3](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%203:%20Shotgun)
 
 ### The Final Chapter: Continuous Batchers
 This section gets the big header. Continuous batchers are a sudden and significant leap in terms of complexity and difficulty. If you've followed the guide up to this point and actually accomplished all the goals, you'll have a big head start, but it's still a very daunting task. There's no simple progression here—it's just a matter of picking a design that works for you, and building it up until you're satisfied.
