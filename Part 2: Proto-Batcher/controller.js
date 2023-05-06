@@ -50,6 +50,8 @@ export async function main(ns) {
 			}
 		)
 	}
+	ramNet.sort((x, y) => x.ram - y.ram);
+	
 
 	// These are variables now, since we'll be recalculating them later.
 	let maxThreads = Math.floor(values.maxBlockSize / 1.75); // Using the maxBlockSize value. I forgot about it last time.
