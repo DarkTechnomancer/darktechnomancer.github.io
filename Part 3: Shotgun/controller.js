@@ -74,6 +74,7 @@ export async function main(ns) {
 				}
 			)
 		}
+		ramNet.sort((x, y) => x.ram - y.ram);
 
 		// The brute force greed algorithm has been moved to a function. This is why greed was included in values.
 		optimizeShotgun(ns, values, ramNet);
