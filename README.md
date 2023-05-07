@@ -297,7 +297,7 @@ But thanks to `nextWrite` you don't even have to do that. We have a way to know 
 
 Generally, you can expect to be able to run a number of parallel batches (or depth) based on the space between tasks, and the time it takes to perform a weaken task: `weakenTime / (4 * spacer) = depth`
 
-Once you have that, it's just a matter of seeding the initial queue and then keeping the whole thing running. If you've followed up to this point, I should even have to tell you what's required from your workers and controllers, but I'll write it down for old-times sake:
+Once you have that, it's just a matter of seeding the initial queue and then keeping the whole thing running. If you've followed up to this point, I shouldn't even have to tell you what's required from your workers and controllers, but I'll write it down for old-times sake:
 
 **Controller** needs to calculate the appropriate depth, deploy initial batches, then redeploy a new batch each time one finishes. This is essentially just our proto-batcher strategy improved to juggle multiple batches at once.
 
