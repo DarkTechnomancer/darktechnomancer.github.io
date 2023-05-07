@@ -124,7 +124,7 @@ export function buildRamNet(ns, server, pRam, pVal) {
 /** @param {NS} ns */
 export function copyScripts(ns, server, values, overwrite = false) {
 	for (const script of values.workers) {
-		if (!ns.fileExists(script, server) || overwrite) {
+		if ((!ns.fileExists(script, server) || overwrite) && ns.hasRootAccess(server)) {
 			ns.scp(script, server);
 		}
 	}
