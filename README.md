@@ -25,6 +25,7 @@ When I say beginner, I really mean it. I am a beginner myself, and this guide is
 	* [Part 1](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%201:%20A%20Batch)
 	* [Part 2](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%202:%20Proto-Batcher)
 	* [Part 3](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%203:%20Shotgun)
+	* [Part 4](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%204:%20Periodic)
 
 ### Glossary of Terms
 There's a lot of jargon that gets thrown around that can be confusing to beginners, so I'll try to define some of the commonly used terms here.
@@ -227,7 +228,7 @@ Remember: H/G/W tasks calculate their effects when they finish.
 
 Let's consider this step passed when you can write a script that consistently deploys a HWGW batch such that each job finishes in the correct order and within 20ms of each other and successfully returns the server to a prepped state. Establishing how you *know* you've passed is a crucial part of this step, and should not be overlooked.
 
-You can find commented code examples of this step in [Part 1](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%201:%20A%20Batch) but I highly encourage you to try figuring it out on your own.
+You can find commented code examples of this step in [**Part 1**](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%201:%20A%20Batch) but I highly encourage you to try figuring it out on your own.
 
 #### Communication: Making your first proto-batcher
 This is an even smaller step than the last one, but no less important. Now that you're able to deploy a batch, you're going to want to continuously deploy batches. This requires some extra functionality from our program:
@@ -248,7 +249,7 @@ Your goals for this step are:
 
 (Note: If you've got a slower computer, you can raise the gap 10 or 20ms, but it really should be quite easy. Landing times are non-negotiable, since I've literally told you exactly how to do that, and it shouldn't be impacted by performance.)
 
-Code examples: [Part 2](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%202:%20Proto-Batcher)
+Code examples: [**Part 2**](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%202:%20Proto-Batcher)
 
 #### Branching Out: Don't let perfect get in the way of good enough
 At this point, you can strongly consider just moving on. Batching is a cool problem, but it's not a necessity. It's only one part of a much bigger game. A proto-batcher is already quite good, and while you could spend hours, days, or weeks fine-tuning it into the perfect money-printing machine, you could also just point it at the top 10-20 servers and have it loot 50% of their funds at a time on an infinite loop and just call it good.
@@ -281,7 +282,7 @@ Goals:
 2) Get the controller to redeploy after it hears back from the final worker.
 3) (Optional) Using lessons from the previous step, write a super-controller that manages two servers at once, prepping one while it shotguns the other, then switching between the two as needed for maximum uptime.
 
-Code examples: [Part 3](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%203:%20Shotgun)
+Code examples: [**Part 3**](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%203:%20Shotgun)
 
 ### The Final Chapter: Continuous Batchers
 This section gets the big header. Continuous batchers are a sudden and significant leap in terms of complexity and difficulty. If you've followed the guide up to this point and actually accomplished all the goals, you'll have a big head start, but it's still a very daunting task. There's no simple progression here—it's just a matter of picking a design that works for you, and building it up until you're satisfied.
@@ -307,6 +308,8 @@ Goals:
 1) Write a batcher that can run continuously without desyncing until the player levels up.
 
 That 's it. Trust me, it's easier said that done, even with everything you've done so far.
+
+If you're having a hard time, you can find my code examples here: [**Part 4**](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%204:%20Periodic)
 
 #### JIT/Just-in-Time
 These are the most complicated of the lot, but they have a lot of major advantages over other designs:
