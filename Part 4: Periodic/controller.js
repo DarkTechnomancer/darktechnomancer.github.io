@@ -182,9 +182,9 @@ export async function main(ns) {
 			} while (!dataPort.empty());
 		}
 		// Clean up leftover scripts when switching targets to prevent port collisions.
-		getServers(ns, (ns, server) => {
-			for (const pid of ns.ps(server)) {
-				if (workers.includes(pid.filename)) ns.kill(pid);
+		getServers(ns, (ns, server, pVal = values) => {
+			for (const process of ns.ps(server)) {
+				if (pVal.workers.includes(process.filename)) ns.kill(process.pid);
 			}
 		});
 		dataPort.clear();
