@@ -96,7 +96,7 @@ There are a lot of functions that go into making a good batcher, many of which y
     
 These functions will give you the amount of time in milliseconds it will take to complete a given task on the server provided by the argument. It uses the current state of both the player and server at the time when the function is called, so make sure you prep your servers before calculating.
 
-Strictly speaking, you only actually need to use one of these, as their times are always consistent relative to each other. At the time of writing, the ratios between them are 1 weaken = 4 hacks = 3.2 grows.
+Strictly speaking, you only actually need to use one of these, as their times are always consistent relative to each other. At the time of writing, the ratios between them are `1 weaken = 4 hacks` and `1 grow = 3.2 hacks`.
 
     Date.now();
     performance.now();
