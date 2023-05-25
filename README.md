@@ -151,6 +151,8 @@ That's it. It's all flat values. One weaken will counteract 25 hacks or 12.5 gro
     
 It's a waste of RAM to use them, but I've included them here for completeness and because that waste really is trivial.
 
+**Note:** Due to floating point math, sometimes the actual security value will end up being off by some absurdly trivial number. To correct this, you'll need to allow a threshold of +- 0.0001 when checking security.
+
     weakenAnalyze(threads, cores);
     
 Okay, so actually there is a special case. When running weaken from your home console, the effectiveness is improved by cores. In that case, you'll want to use this to determine the number of threads, but just remember that you should only factor in cores if you *know* that your tasks are going to be executed there.
