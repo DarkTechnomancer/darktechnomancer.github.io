@@ -17,10 +17,24 @@ export async function main(ns) {
 
 	// Pretty simple. Just wait until something writes to the log and save the info.
 	// Writes to its own console as well as a text file.
+	let max = 0;
+	let count = 0;
+	let total = 0;
+	let errors = 0;
 	while (true) {
 		await logPort.nextWrite();
 		do {
 			const data = logPort.read();
+			// if (data > max) max = data;
+			// if (data > 5) ++errors;
+			// total += data;
+			// ++count;
+			// ns.clearLog();
+			// ns.print(`Max desync: ${max}`);
+			// ns.print(`Average desync: ${total / count}`);
+			// ns.print(`Errors: ${errors}`);
+
+			// if (data.startsWith("WARN")) ns.print(data);
 			ns.print(data);
 			// ns.write(logFile, data);  // Comment this line out to disable txt logging.
 		} while (!logPort.empty());
