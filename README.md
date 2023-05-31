@@ -1,4 +1,5 @@
-
+﻿
+  
   
 ## A Beginner's Guide to Batching
 When I say beginner, I really mean it. I am a beginner myself, and this guide is written specifically with the things I wish I'd known before I started in mind. What I seek to do with this guide is to lay out the basic principles of a batcher, the tools available, and some of the common pitfalls to avoid.
@@ -31,7 +32,7 @@ When I say beginner, I really mean it. I am a beginner myself, and this guide is
 There's a lot of jargon that gets thrown around that can be confusing to beginners, so I'll try to define some of the commonly used terms here.
 
 - **Prep/Prepped**: A server is "prepped" when its security as at the minimum and it's money is at the maximum. This is the ideal state for hacking.
-- **Task**: A Hack, Grow, or Weaken command run through a script. Generally shortened to H/G/W.
+- **Task/Job**: A Hack, Grow, or Weaken command run through a script. Generally shortened to H/G/W.
  - **Batch**: A "batch" is a series of H/G/W tasks running in parallel such that they will end in a specific order right after each other, returning the server back to a prepped state when they resolve.
  - **HGW**: A batch that consists of a Hack, followed by a Grow, and then finally a Weaken. This type of batch is faster to complete and less error prone, but requires more RAM and very particular calculations (requiring either Formulas.exe or very inefficient overestimations).
  - **HWGW**: The most common type of batch. Consists of a Hack, then a Weaken, then a Grow, then finally a second Weaken to bring the server back to a prepped state. This guide will focus almost exclusively on HWGW.
@@ -47,8 +48,8 @@ There's a lot of jargon that gets thrown around that can be confusing to beginne
  - **Port**: Not to be confused with the ports that need to be opened to gain root access on servers, netscript ports are a special tool that allows active scripts to communicate with each other. More on this later.
  - **Shotgun**: A scheduling method that runs every single batch at once. Very RAM intensive. Can trigger the infinite loop protection if you aren't careful. Basically a proto-batcher on steroids.
  - **Continuous**: Batchers that run at a steady rate. Basically, not a shotgun.
- - **Periodic**: A continuous scheduling method that deploys entire batches at set intervals.
- - **JIT/Just-In-Time**: A continuous scheduling method that deploys jobs individually, as close to the latest possible moment as is practical/feasible.
+ - **Periodic**: A continuous scheduling method that deploys batches at set intervals.
+ - **JIT/Just-In-Time**: A continuous scheduling method that dynamically deploys tasks as needed according to programmed logic.
  
 ### Where to Begin
 It can be a pretty daunting task to make a batcher. There are a lot of factors that interact with each other, some of which are obvious and easy to predict, some of which are impossible to anticipate without forewarning or intimate knowledge of the inner workings of the game. For now, let's just take things one step at a time. First a checklist of things you need (and a few special mentions regarding things you *don't* need). Based loosely on a helpful discord message from Thatman:
@@ -296,9 +297,13 @@ A term coined by discord user stalefish, who wrote an incredible algorithm that 
 
 The logic is essentially this: you want to deploy batches periodically, at a set interval which has been calculated to always be safe. Even with `additionalMsec`, stalefish's algorithm still works, and you can actually modify it by trimming out a lot of the accommodations it made for the different durations of H/G/W tasks. If the timing is good for a weaken, it's good for the rest of them too thanks to `additionalMsec`.
 
-But thanks to `nextWrite` you don't even have to do that. We have a way to know *exactly* when it's safe to deploy a new batch: whenever a worker carrying a weaken task finishes! Well, whenever *one* of the weakens finishes. If you deployed every time either of them finished, you'd end up with too many simultaneous batches and cause collisions.
+But thanks to `nextWrite` you don't even have to do that. We have a way to know *exactly* when it's safe to deploy a new batch: whenever a worker carrying a weaken task finishes! Well, whenever *one* of the weakens finishes. If you deployed every time either of them finished, you'd end up with too many simultaneous batches.
 
-Generally, you can expect to be able to run a number of parallel batches (or depth) based on the space between tasks, and the time it takes to perform a weaken task: `weakenTime / (4 * spacer) = depth`
+Technically, waiting for `nextWrite` is a JIT strategy, but no matter what period you use or how you end up calculating it, the best way to accurately time your program will be by using `nextWrite`. If you choose to use a method like stalefish's, you can simply schedule your weakens so that they are separated by the correct period.
+
+Generally, you can expect to be able to run a maximum number of parallel batches (or depth) based on the space between tasks, and the time it takes to perform a weaken task: `weakenTime / (4 * spacer) = depth`
+
+However, with lower amounts of RAM, you may not be able to fit enough batches in memory to actually reach that maximum depth. It's up to you to find a way to accurately predict the maximum depth your system can support.
 
 Once you have that, it's just a matter of seeding the initial queue and then keeping the whole thing running. If you've followed up to this point, I shouldn't even have to tell you what's required from your workers and controllers, but I'll write it down for old-times sake:
 
@@ -309,7 +314,7 @@ Once you have that, it's just a matter of seeding the initial queue and then kee
 Goals:
 1) Write a batcher that can run continuously without desyncing until the player levels up.
 
-That 's it. Trust me, it's easier said that done, even with everything you've done so far.
+That 's it. Trust me, it's easier said that done, even with everything you've done so far. Performance becomes much more important for continuous batchers, and it's crucial that your program can do everything it needs quickly and efficiently, while remaining robust against any unexpected delays.
 
 If you're having a hard time, you can find my code examples here: [**Part 4**](https://github.com/DarkTechnomancer/darktechnomancer.github.io/tree/main/Part%204:%20Periodic)
 
@@ -334,12 +339,14 @@ I'm not going to go into high detail on how to accomplish this. If you've made i
 
 **Workers** must execute their jobs on time. This is crucial since you aren't deploying all the jobs from a batch all at once. Since you're slotting the shorter jobs in between the longer ones as you go, it's imperative that execution times are calculated as accurately as possible, and that any *inaccuracies* are reported and accounted for.
 
-One option that can help here is permanent Weaken workers. This has the disadvantage of being very static unless the workers are able to receive new parameters from the controller, but since the number of active weaken jobs should theoretically always remain constant, it saves you the trouble of having to redeploy them and keeps your timing very consistent as long as the workers stay in sync with each other.
+Until now, I've written this guide with the assumption that each batch will be deployed all at once. With a JIT batcher (or even a Periodic one, if you know how to do it) one of the main advantages is the ability to hold off on deploying jobs until the last moment.
+
+Where the previous part emphasized performance, this part is all about efficiency. Doing as much as possible with as little RAM as you can manage.
 
 Goals:
 1) Run a continuous batcher that uses less ram to get the same money over time as an equivalent periodic batcher.
 
-Once again, that's it. Easier said than done. My own JIT batcher uses a huge buffer to prevent desyncs that causes it to actually take *more* RAM than a periodic batcher. It's a work in progress, but if you've bothered to read this far then I think you're main lesson should be that it's *always* a work in progress.
+Once again, that's it. Easier said than done. My first JIT batcher used a huge buffer to prevent desyncs that caused it to actually take *more* RAM than a periodic batcher. It's a work in progress, but if you've bothered to read this far then I think you're main lesson should be that it's *always* a work in progress.
 
 ### "Now What?": Looking into the future
 At this point, there's nothing really left for me to say. This is as far as I've personally gotten, and it's been a heck of a journey getting here. Hopefully, by writing this, I can help a few other beginners like me a steadier path towards their first functional batchers. I know I was pretty happy when I finally got mine to work.
