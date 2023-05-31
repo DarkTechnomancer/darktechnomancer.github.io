@@ -116,7 +116,7 @@ Some examples of ways to use the timing functions.
     
 These are functions used to wait for a period of time before executing more code. Sleep is simple enough, you just wait for a predefined number of milliseconds. I'll cover nextWrite in more detail when I talk about ports.
 
-    await  ns.grow(server,  {additionalMsec:  ms});
+    await ns.grow(server, {additionalMsec: ms});
     
 The key aspect here is `additionalMsec`. The H/G/W functions can take an extra optional argument called "opts" which has three special options that modify the behavior. It has to be a dictionary (hence the {} braces surrounding the argument) and the options are `additionalMsec`, `stock`, and `threads`. We'll ignore `stock` for now and just look at the other two. `threads` lets you tell the task to use fewer threads than the script running it. What for? I don't know. Moving on. `additionalMsec` lets you add a number of milliseconds as a delay, forcing the task to take that much longer.
 
