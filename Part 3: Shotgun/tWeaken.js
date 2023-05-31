@@ -1,23 +1,28 @@
 /*
-Workers are almost entirely the same. The only major change across all of them is that they now write their logs
-to a txt file instead of the terminal. This cuts down on lag and is much easier to read and search through.
-Aside from that, the weaken worker now reports its batch number instead of its type to the controller.
+	Workers are mostly the same, aside from uncommented portions allowing the hack and grow workers to report.
+	I've also generally commented out the terminal logging, as it gets rather laggy when there's a lot of scripts
+	writing to terminal.
 */
 
 /** @param {NS} ns */
 export async function main(ns) {
-	const metrics = JSON.parse(ns.args[0]);
-	const delay = metrics.end - metrics.time - Date.now();
+	const job = JSON.parse(ns.args[0]);
+
+	let delay = job.end - job.time - Date.now();
 	if (delay < 0) {
-		ns.writePort(metrics.log, `ERROR: ${metrics.type} was ${-delay}ms too late.\n`);
-		return;
+		// We write back to the controller if jobs are delayed so that it can adjust the other jobs to match.
+		ns.tprint(`WARN: Batch ${job.batch} ${job.type} was ${-delay}ms late. (${job.end})\n`);
+		ns.writePort(ns.pid, -delay);
+		delay = 0;
+	} else {
+		ns.writePort(ns.pid, 0);
 	}
-	await ns.weaken(metrics.target, { additionalMsec: delay });
+	await ns.weaken(job.target, { additionalMsec: delay });
 	const end = Date.now();
 
-	// Slight change here, W2 now reports batch number instead of type.
+	// Write back to let the controller know that we're done.
 	ns.atExit(() => {
-		if (metrics.type === "weaken2") ns.writePort(metrics.port, metrics.batch);
-		ns.writePort(metrics.log, `Batch ${metrics.batch}: ${metrics.type} finished at ${end.toString().slice(-6)}/${Math.round(metrics.end).toString().slice(-6)}\n`);
+		if (job.report) ns.writePort(job.port, job.type + job.server);
+		// ns.tprint(`Batch ${job.batch}: ${job.type} finished at ${end.toString().slice(-6)}/${Math.round(job.end).toString().slice(-6)}\n`);
 	});
 }

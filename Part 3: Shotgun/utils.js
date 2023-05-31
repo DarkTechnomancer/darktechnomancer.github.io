@@ -1,252 +1,218 @@
 /*
-  The optimization algorithm lives here now. Otherwise, little has changed.
-  If you're following these examples, don't forget to update the prep function to send workers their log port.
- */
+  This file remains unchanged from the previous part, aside from updating the file paths.
+  I didn't even bother removing the old comments.
+*/
 
 /** @param {NS} ns */
 export async function main(ns) {
 	ns.tprint("This is just a function library, it doesn't do anything.");
 }
 
-/*
-The optimization algorithm has gotten a major overhaul. It now brute forces the entire range from 1% to 99%
-to find the optimal values for a superbatch. Since we're doing 0.1% increments, it can take quite a while.
-This is pretty much only viable due to the very long delay between shotgun batches.
-*/
+// The recursive server navigation algorithm. The lambda predicate determines which servers to add to the final list.
+// You can also plug other functions into the lambda to perform other tasks that check all servers at the same time.
 /** @param {NS} ns */
-export function optimizeShotgun(ns, values, ramNet) {
-	const wTime = ns.getWeakenTime(values.target);
-	let maxMoney = ns.getServerMaxMoney(values.target);
-	let greed = 0.01;
-	let bestIncome = 0;
-	while (greed <= 0.99) {
-		// Simulating all of the threads instead of just growth.
-		const amount = maxMoney * greed;
-		const hThreads = Math.max(Math.min(Math.floor(ns.hackAnalyzeThreads(values.target, amount)), Math.floor(ramNet.slice(-2)[0].ram / 1.7)), 1);
-		const tAmount = ns.hackAnalyze(values.target) * hThreads;
-		const gThreads = Math.ceil(ns.growthAnalyze(values.target, maxMoney / (maxMoney - (maxMoney * tAmount))) * 1.01);
-		const wThreads1 = Math.max(Math.ceil(hThreads * 0.002 / 0.05), 1);
-		const wThreads2 = Math.max(Math.ceil(gThreads * 0.004 / 0.05), 1);
-		const batchSize = hThreads * 1.7 + (gThreads + wThreads1 + wThreads2) * 1.75;
-		const batchCount = values.totalThreads * 1.75 / batchSize;
-		// This formula is where the magic happens. Trying to balance higher income over longer times.
-		const income = tAmount * maxMoney * batchCount / (values.spacer * 4 * batchCount + wTime + values.buffer);
-		// Adjusting values. No need to return anything since maps are passed by reference.
-		if (income > bestIncome) {
-			values.bestIncome = income;
-			values.greed = greed;
-			values.depth = batchCount;
-		}
-		greed += 0.001;
-	}
-}
-
-// The recursive server navigation algorithm.
-/** @param {NS} ns */
-export function getServers(ns, lambdaCondition = (ns, server) => true, hostname = "home", servers = [], visited = []) {
+export function getServers(ns, lambdaCondition = () => true, hostname = "home", servers = [], visited = []) {
 	if (visited.includes(hostname)) return;
 	visited.push(hostname);
-	if (lambdaCondition(ns, hostname)) servers.push(hostname);
+	if (lambdaCondition(hostname)) servers.push(hostname);
 	const connectedNodes = ns.scan(hostname);
 	if (hostname !== "home") connectedNodes.shift();
 	for (const node of connectedNodes) getServers(ns, lambdaCondition, node, servers, visited);
 	return servers;
 }
 
-// Custom predicates
+// Here are a couple of my own getServers modules.
+// This one finds the best target for hacking. It tries to balance expected return with time taken.
 /** @param {NS} ns */
-export function checkTarget(ns, server, pVal) {
-	if (ns.getServerRequiredHackingLevel(server) <= ns.getHackingLevel() / 2) {
-		const previousScore = ns.getServerMaxMoney(pVal.target) / ns.getServerMinSecurityLevel(pVal.target);
-		const currentScore = ns.getServerMaxMoney(server) / ns.getServerMinSecurityLevel(server);
-		if (currentScore > previousScore) pVal.target = server;
+export function checkTarget(ns, server, target = "n00dles", forms = false) {
+	if (!ns.hasRootAccess(server)) return target;
+	const player = ns.getPlayer();
+	const serverSim = ns.getServer(server);
+	const pSim = ns.getServer(target);
+	let previousScore;
+	let currentScore;
+	if (serverSim.requiredHackingSkill <= player.skills.hacking / (forms ? 1 : 2)) {
+		if (forms) {
+			serverSim.hackDifficulty = serverSim.minDifficulty;
+			pSim.hackDifficulty = pSim.minDifficulty;
+			previousScore = pSim.moneyMax / ns.formulas.hacking.weakenTime(pSim, player) * ns.formulas.hacking.hackChance(pSim, player);
+			currentScore = serverSim.moneyMax / ns.formulas.hacking.weakenTime(serverSim, player) * ns.formulas.hacking.hackChance(serverSim, player);
+		} else {
+			previousScore = pSim.moneyMax / pSim.minDifficulty / ns.getWeakenTime(pSim.hostname);
+			currentScore = serverSim.moneyMax / serverSim.minDifficulty / ns.getWeakenTime(serverSim.hostname);
+		}
+		if (currentScore > previousScore) target = server;
 	}
+	return target;
 }
 
+// A simple function for copying a list of scripts to a server.
 /** @param {NS} ns */
-export function buildRamNet(ns, server, pRam, pVal) {
-	if (ns.hasRootAccess(server)) {
-		const ram = ns.getServerMaxRam(server) - ns.getServerUsedRam(server);
-		if (ram >= 1.60) {
-			const block = { server: server, ram: ram, used: false };
-			pRam.push(block);
-			if (ram < pVal.minBlockSize) pVal.minBlockSize = ram;
-			if (ram > pVal.maxBlockSize) pVal.maxBlockSize = ram;
-			pVal.totalThreads += Math.floor(ram / 1.75);
-			return true;
+export function copyScripts(ns, server, scripts, overwrite = false) {
+	for (const script of scripts) {
+		if ((!ns.fileExists(script, server) || overwrite) && ns.hasRootAccess(server)) {
+			ns.scp(script, server);
 		}
 	}
 }
 
 // A generic function to check that a given server is prepped. Mostly just a convenience.
 export function isPrepped(ns, server) {
+	const tolerance = 0.0001;
 	const maxMoney = ns.getServerMaxMoney(server);
 	const money = ns.getServerMoneyAvailable(server);
 	const minSec = ns.getServerMinSecurityLevel(server);
 	const sec = ns.getServerSecurityLevel(server);
-	if (money < maxMoney || sec > minSec) return false;
-	return true;
+	const secFix = Math.abs(sec - minSec) < tolerance;
+	return (money === maxMoney && secFix) ? true : false;
 }
 
 /*
-This is the function I'm using to prep servers. It's not optimized and may be buggy. Not really part of the guide
-but the rest of the code wouldn't function if I didn't include it. It's tested and functional, but I make no guarantees
-about the quality. We'll be using a slightly modified proto-batch strategy for prepping.
+	This prep function isn't part of the tutorial, but the rest of the code wouldn't work without it.
+	I don't make any guarantees, but I've been using it and it's worked well enough. I'll comment it anyway.
+	The prep strategy uses a modified proto-batching technique, which will be covered in part 2.
 */
 /** @param {NS} ns */
-export async function prep(ns, values) {
-	// Some initial values that get used later.
-	let secDone = false;
-	let startTime = Date.now();
-	let batchCount = -1;
-	let allocated = 0;
+export async function prep(ns, values, ramNet) {
+	const maxMoney = values.maxMoney;
+	const minSec = values.minSec;
+	let money = values.money;
+	let sec = values.sec;
+	while (!isPrepped(ns, values.target)) {
+		const wTime = ns.getWeakenTime(values.target);
+		const gTime = wTime * 0.8;
+		const dataPort = ns.getPortHandle(ns.pid);
+		dataPort.clear();
 
-	while (true) {
-		const maxMoney = ns.getServerMaxMoney(values.target);
-		let money = ns.getServerMoneyAvailable(values.target);
-		if (money === 0) money = 1; // This is just protection against a potential divide by zero error
-		const minSec = ns.getServerMinSecurityLevel(values.target);
-		const sec = ns.getServerSecurityLevel(values.target);
+		const pRam = ramNet.cloneBlocks();
+		const maxThreads = Math.floor(ramNet.maxBlockSize / 1.75);
+		const totalThreads = ramNet.prepThreads;
+		let wThreads1 = 0;
+		let wThreads2 = 0;
+		let gThreads = 0;
+		let batchCount = 1;
+		let script, mode;
+		/*
+		Modes:
+		0: Security only
+		1: Money only
+		2: One shot
+		*/
 
-		// This probably looks familiar. Too familiar. Might be time to turn it into a function.
-		// It builds the memory map we use to allocate threads, in case you forgot.
-		const ramNet = [];
-		values.minBlockSize = Infinity;
-		values.maxBlockSize = 0;
-		values.totalThreads = 0;
-		getServers(
-			ns,
-			(ns, server, pVal = values, pRam = ramNet) => {
-				buildRamNet(ns, server, pRam, pVal);
-				return false;
-			}
-		)
-		ramNet.sort((x, y) => x.ram - y.ram);
-
-		// Calculate the maximum number of threads we can allocate in one block.
-		// Also keep track of time elapsed for UI stuff.
-		const maxThreads = Math.floor(values.maxBlockSize / 1.75);
-		const timeElapsed = Date.now() - startTime;
-
-		ns.clearLog();
-		ns.print(`${values.target}:`);
-		ns.print(` Server Money: \$${ns.formatNumber(money, 2)} / \$${ns.formatNumber(maxMoney, 2)} (${(money / maxMoney * 100).toFixed(2)}%)`);
-		ns.print(` Server Security: +${(sec - minSec).toFixed(2)}`);
-
-
-		// Minimize the security
-		if (sec > minSec && !secDone) {
-			ns.print(` Prep status: preparing security...`);
-			// Calculate how many threads we need to allocate and estimate how many rounds it's going to take.
-			const bestThreads = Math.ceil((sec - minSec) * 20) - allocated;
-			const wThreads = Math.min(bestThreads, maxThreads);
-			const wTime = ns.getWeakenTime(values.target);
-			const wEnd = Date.now() + wTime + 100; // Arbitrary buffer added to the end time.
-			if (batchCount < 0) {
-				batchCount = Math.ceil(bestThreads / maxThreads);
-				startTime = Date.now();
-			}
-
-			// Allocate as many threads as we can.
-			if (wThreads > 0) {
-				const metrics = { batch: "prep", target: values.target, type: "prepWeaken", time: wTime, end: wEnd, port: values.log, log: values.log };
-				for (const block of ramNet) {
-					if (block.ram / 1.75 >= wThreads && !block.used) {
-						ns.scp("/part3/tWeaken.js", block.server);
-						ns.exec("/part3/tWeaken.js", block.server, wThreads, JSON.stringify(metrics));
-						block.used = true;
-						allocated += wThreads;
-						break;
-					}
-				}
-			}
-
-			// Update the log with time remaining.
-			const duration = wTime * batchCount;
-			ns.print(` Estimated time remaining: ${ns.tFormat(duration - timeElapsed)}`);
-
-			// If we've run out of threads to allocate, then we resut the allocated threads and wait.
-			// If we've allocated all of them, then we just wait to prevent an infinite loop.
-			if (maxThreads < 1) {
-				allocated = 0;
-				await ns.sleep(20);
-			} else if (bestThreads < 1) {
-				await ns.sleep(20);
-			}
-			continue;
-		}
-
-		// Mark security as done and reset the counters.
-		if (!secDone) {
-			batchCount = -1;
-			startTime = Date.now();
-			secDone = true;
-			allocated = 0;
-		}
-
-		// Max out the money. Mostly the same as security except where noted.
 		if (money < maxMoney) {
-			ns.print(" Prerun status: maximizing money...")
-			const gTime = Math.ceil(ns.getGrowTime(values.target));
-			const wTime = Math.ceil(ns.getWeakenTime(values.target));
-			// Limit weaken threads to our second best ram server.
-			const wMax = ramNet.slice(-2)[0].ram / 1.75;
-			const bestThreads = Math.ceil(ns.growthAnalyze(values.target, maxMoney / money)) - allocated;
-			const gThreads = Math.min(bestThreads, maxThreads);
-			const wThreads = Math.min(wMax, Math.ceil(ns.growthAnalyzeSecurity(gThreads) / 0.05));
+			gThreads = Math.ceil(ns.growthAnalyze(values.target, maxMoney / money));
+			wThreads2 = Math.ceil(ns.growthAnalyzeSecurity(gThreads) / 0.05);
+		}
+		if (sec > minSec) {
+			wThreads1 = Math.ceil((sec - minSec) * 20);
+			if (!(wThreads1 + wThreads2 + gThreads <= totalThreads && gThreads <= maxThreads)) {
+				gThreads = 0;
+				wThreads2 = 0;
+				batchCount = Math.ceil(wThreads1 / totalThreads);
+				if (batchCount > 1) wThreads1 = totalThreads;
+				mode = 0;
+			} else mode = 2;
+		} else if (gThreads > maxThreads || gThreads + wThreads2 > totalThreads) {
+			mode = 1;
+			const oldG = gThreads;
+			wThreads2 = Math.max(Math.floor(totalThreads / 13.5), 1);
+			gThreads = Math.floor(wThreads2 * 12.5);
+			batchCount = Math.ceil(oldG / gThreads);
+		} else mode = 2;
 
-			// Make sure weaken ends after grow.
-			const gEnd = Date.now() + wTime + 100;
-			const wEnd = Date.now() + wTime + 120;
+		// Big buffer here, since all the previous calculations can take a while. One second should be more than enough.
+		const wEnd1 = Date.now() + wTime + 1000;
+		const gEnd = wEnd1 + values.spacer;
+		const wEnd2 = gEnd + values.spacer;
 
-			if (batchCount < 0) {
-				batchCount = Math.ceil(bestThreads / maxThreads);
-				startTime = Date.now();
-			}
-			// Allocate threads if there's room for both.
-			if (gThreads > 0 && wThreads > 0) {
-				const wMetrics = { batch: "prep", target: values.target, type: "prepWeaken", time: wTime, end: wEnd, port: values.log, log: values.log };
-				const gMetrics = { batch: "prep", target: values.target, type: "prepgrow", time: gTime, end: gEnd, port: values.log, log: values.log };
-				let gFound = false;
-				let wFound = false;
+		// "metrics" here is basically a mock Job object. Again, this is just an artifact of repurposed old code.
+		const metrics = {
+			batch: "prep",
+			target: values.target,
+			type: "none",
+			time: 0,
+			end: 0,
+			port: ns.pid,
+			log: values.log,
+			report: false
+		};
 
-				// Give weaken the smallest available server it will fit on, then growth.
-				for (const block of ramNet) {
-					if (block.ram / 1.75 >= wThreads && !block.used && !wFound) {
-						ns.scp("/part3/tWeaken.js", block.server);
-						ns.exec("/part3/tWeaken.js", block.server, wThreads, JSON.stringify(wMetrics));
-						block.used = true;
-						wFound = true;
-						if (gFound) break;
-					} else if (block.ram / 1.75 >= gThreads && !block.used && !gFound) {
-						ns.scp("/part3/tGrow.js", block.server);
-						ns.exec("/part3/tGrow.js", block.server, gThreads, JSON.stringify(gMetrics));
-						block.used = true;
-						gFound = true;
-						allocated += gThreads;
-						if (wFound) break;
-					}
-				}
+		// Actually assigning threads. We actually allow grow threads to be spread out in mode 1.
+		// This is because we don't mind if the effect is a bit reduced from higher security unlike a normal batcher.
+		// We're not trying to grow a specific amount, we're trying to grow as much as possible.
+		for (const block of pRam) {
+			while (block.ram >= 1.75) {
+				const bMax = Math.floor(block.ram / 1.75)
+				let threads = 0;
+				if (wThreads1 > 0) {
+					script = "/part4/tWeaken.js";
+					metrics.type = "pWeaken1";
+					metrics.time = wTime;
+					metrics.end = wEnd1;
+					threads = Math.min(wThreads1, bMax);
+					if (wThreads2 === 0 && wThreads1 - threads <= 0) metrics.report = true;
+					wThreads1 -= threads;
+				} else if (wThreads2 > 0) {
+					script = "/part4/tWeaken.js";
+					metrics.type = "pWeaken2";
+					metrics.time = wTime;
+					metrics.end = wEnd2;
+					threads = Math.min(wThreads2, bMax);
+					if (wThreads2 - threads === 0) metrics.report = true;
+					wThreads2 -= threads;
+				} else if (gThreads > 0 && mode === 1) {
+					script = "/part4/tGrow.js";
+					metrics.type = "pGrow";
+					metrics.time = gTime;
+					metrics.end = gEnd;
+					threads = Math.min(gThreads, bMax);
+					metrics.report = false;
+					gThreads -= threads;
+				} else if (gThreads > 0 && bMax >= gThreads) {
+					script = "/part4/tGrow.js";
+					metrics.type = "pGrow";
+					metrics.time = gTime;
+					metrics.end = gEnd;
+					threads = gThreads;
+					metrics.report = false;
+					gThreads = 0;
+				} else break;
+				metrics.server = block.server;
+				const pid = ns.exec(script, block.server, threads, JSON.stringify(metrics));
+				if (!pid) throw new Error("Unable to assign all jobs.");
+				block.ram -= 1.75 * threads;
 			}
-			const duration = wTime * batchCount;
-			ns.print(` Estimated time remaining: ${ns.tFormat(duration - timeElapsed)}`);
-			if (maxThreads < 1) {
-				allocated = 0;
-				await ns.sleep(20);
-			} else if (bestThreads < 1) {
-				await ns.sleep(20);
-			}
-			continue;
 		}
 
-		// This prep strategy is a little loose the balance of grow/weaken threads, so it doesn't always get it right on the first try.
-		if (money < maxMoney || sec > minSec) {
-			batchCount = -1;
-			secDone = false;
-			allocated = 0;
-			startTime = Date.now();
-			continue;
-		}
-		break;
+		// Fancy UI stuff to update you on progress.
+		const tEnd = ((mode === 0 ? wEnd1 : wEnd2) - Date.now()) * batchCount + Date.now();
+		const timer = setInterval(() => {
+			ns.clearLog();
+			switch (mode) {
+				case 0:
+					ns.print(`Weakening security on ${values.target}...`);
+					break;
+				case 1:
+					ns.print(`Maximizing money on ${values.target}...`);
+					break;
+				case 2:
+					ns.print(`Finalizing preparation on ${values.target}...`);
+			}
+			ns.print(`Security: +${ns.formatNumber(sec - minSec, 3)}`);
+			ns.print(`Money: \$${ns.formatNumber(money, 2)}/${ns.formatNumber(maxMoney, 2)}`);
+			const time = tEnd - Date.now();
+			ns.print(`Estimated time remaining: ${ns.tFormat(time)}`);
+			ns.print(`~${batchCount} ${(batchCount === 1) ? "batch" : "batches"}.`);
+		}, 200);
+		ns.atExit(() => clearInterval(timer));
+
+		// Wait for the last weaken to finish.
+		do await dataPort.nextWrite(); while (!dataPort.read().startsWith("pWeaken"));
+		clearInterval(timer);
+		await ns.sleep(100);
+
+		money = ns.getServerMoneyAvailable(values.target);
+		sec = ns.getServerSecurityLevel(values.target);
 	}
+	return true;
 }
