@@ -1,4 +1,4 @@
-﻿
+
   
   
 ## A Beginner's Guide to Batching
@@ -116,7 +116,7 @@ Some examples of ways to use the timing functions.
     
 These are functions used to wait for a period of time before executing more code. Sleep is simple enough, you just wait for a predefined number of milliseconds. I'll cover nextWrite in more detail when I talk about ports.
 
-    await ns.grow(server, {additionalMsec: ms});
+    await  ns.grow(server,  {additionalMsec:  ms});
     
 The key aspect here is `additionalMsec`. The H/G/W functions can take an extra optional argument called "opts" which has three special options that modify the behavior. It has to be a dictionary (hence the {} braces surrounding the argument) and the options are `additionalMsec`, `stock`, and `threads`. We'll ignore `stock` for now and just look at the other two. `threads` lets you tell the task to use fewer threads than the script running it. What for? I don't know. Moving on. `additionalMsec` lets you add a number of milliseconds as a delay, forcing the task to take that much longer.
 
@@ -245,6 +245,7 @@ You might have guessed from the header, but I'm going to highly recommend gettin
 Second, as mentioned in the earlier section discussing `nextWrite`, it gives us much more precise timing control over what happens when a script finishes. Also, good communication between controller and workers will make it much easier in the future for you to detect and troubleshoot errors.
 
 Your goals for this step are:
+
 1) Tighten the gap between tasks to only 5ms.
 2) Start a new batch within 5ms of the previous one
 3) Have your tasks ending within 1-2ms of when they are supposed to.
@@ -281,6 +282,7 @@ Another issue is that if you have lots and lots of RAM, the process of firing th
 There are ways around this, such as using formulas to predict when you need to change threads, cancelling active jobs on a level up, or overestimating the number of grow threads required, but ultimately I'll leave those solutions to you.
 
 Goals:
+
 1) Fire off a shotgun batch using all available RAM that executes without any timing or security desyncs (running out of money is forgivable in the case of level ups)
 2) Get the controller to redeploy after it hears back from the final worker.
 3) (Optional) Using lessons from the previous step, write a super-controller that manages two servers at once, prepping one while it shotguns the other, then switching between the two as needed for maximum uptime.
@@ -312,6 +314,7 @@ Once you have that, it's just a matter of seeding the initial queue and then kee
 **Workers** are thus pretty much identical to proto-batcher workers. They just need to ensure that they finish when they're supposed to, and tell the controller when they're done.
 
 Goals:
+
 1) Write a batcher that can run continuously without desyncing until the player levels up.
 
 That 's it. Trust me, it's easier said that done, even with everything you've done so far. Performance becomes much more important for continuous batchers, and it's crucial that your program can do everything it needs quickly and efficiently, while remaining robust against any unexpected delays.
@@ -344,6 +347,7 @@ Until now, I've written this guide with the assumption that each batch will be d
 Where the previous part emphasized performance, this part is all about efficiency. Doing as much as possible with as little RAM as you can manage.
 
 Goals:
+
 1) Run a continuous batcher that uses less ram to get the same money over time as an equivalent periodic batcher.
 
 Once again, that's it. Easier said than done. My first JIT batcher used a huge buffer to prevent desyncs that caused it to actually take *more* RAM than a periodic batcher. It's a work in progress, but if you've bothered to read this far then I think you're main lesson should be that it's *always* a work in progress.
@@ -353,6 +357,7 @@ At this point, there's nothing really left for me to say. This is as far as I've
 
 Here are a few final optimizations that you can consider working on once you've managed to accomplish everything written above:
 #### Final Goals:
+
 - Handle levelups: I talked a bit about stuff like formulas, overestimation, and recalculation, but it's a deep enough subject that I could write an entire guide about *only* bracing your batcher against levelups. The easiest option is to ping-pong between servers, but with a bit of careful programming you can write your batcher so that it survives through multiple levels indefinitely (even without formulas).
 - Refine your target selection: The algorithm mentioned earlier is far from the best or only way to pick a target. You can start thinking about factors like how much RAM you have available, how much it costs to rob a target, and how much RAM you can dedicate before it's better to just add a second target.
 - Add more targets: I touched on it briefly, but why stop at one? Run two, or three, or a dozen batchers all optimized against different targets, each controlled by a master script that coordinates between them. The sky is the limit.
