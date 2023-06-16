@@ -150,7 +150,7 @@ export async function prep(ns, values, ramNet) {
 				const bMax = Math.floor(block.ram / 1.75)
 				let threads = 0;
 				if (wThreads1 > 0) {
-					script = "/part4/tWeaken.js";
+					script = "/part1/tWeaken.js";
 					metrics.type = "pWeaken1";
 					metrics.time = wTime;
 					metrics.end = wEnd1;
@@ -158,7 +158,7 @@ export async function prep(ns, values, ramNet) {
 					if (wThreads2 === 0 && wThreads1 - threads <= 0) metrics.report = true;
 					wThreads1 -= threads;
 				} else if (wThreads2 > 0) {
-					script = "/part4/tWeaken.js";
+					script = "/part1/tWeaken.js";
 					metrics.type = "pWeaken2";
 					metrics.time = wTime;
 					metrics.end = wEnd2;
@@ -166,7 +166,7 @@ export async function prep(ns, values, ramNet) {
 					if (wThreads2 - threads === 0) metrics.report = true;
 					wThreads2 -= threads;
 				} else if (gThreads > 0 && mode === 1) {
-					script = "/part4/tGrow.js";
+					script = "/part1/tGrow.js";
 					metrics.type = "pGrow";
 					metrics.time = gTime;
 					metrics.end = gEnd;
@@ -174,7 +174,7 @@ export async function prep(ns, values, ramNet) {
 					metrics.report = false;
 					gThreads -= threads;
 				} else if (gThreads > 0 && bMax >= gThreads) {
-					script = "/part4/tGrow.js";
+					script = "/part1/tGrow.js";
 					metrics.type = "pGrow";
 					metrics.time = gTime;
 					metrics.end = gEnd;
