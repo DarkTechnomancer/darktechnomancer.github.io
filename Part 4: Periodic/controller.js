@@ -347,7 +347,7 @@ class RamNet {
 					this.#blocks.push(block);
 					if (ram < this.#minBlockSize) this.#minBlockSize = ram;
 					if (ram > this.#maxBlockSize) this.#maxBlockSize = ram;
-					this.#totalRam += ram, 0;
+					this.#totalRam += ram;
 					this.#maxRam += maxRam;
 					this.#prepThreads += Math.floor(ram / 1.75);
 				}
