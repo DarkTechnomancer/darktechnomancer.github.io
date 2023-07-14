@@ -165,6 +165,7 @@ class RamNet {
 	#maxBlockSize = 0;
 	#totalRam = 0;
 	#maxRam = 0;
+	#prepThreads = 0;
 	#index = new Map();
 	constructor(ns, servers) {
 		for (const server of servers) {
@@ -178,6 +179,7 @@ class RamNet {
 					if (ram > this.#maxBlockSize) this.#maxBlockSize = ram;
 					this.#totalRam += ram;
 					this.#maxRam += maxRam;
+					this.#prepThreads += Math.floor(ram / 1.75);
 				}
 			}
 		}
@@ -213,6 +215,10 @@ class RamNet {
 	get maxBlockSize() {
 		return this.#maxBlockSize;
 	}
+
+	get prepThreads() {
+    		return this.#prepThreads;
+  	}
 
 	assign(job) {
 		const block = this.#blocks.find(block => block.ram >= job.cost);
