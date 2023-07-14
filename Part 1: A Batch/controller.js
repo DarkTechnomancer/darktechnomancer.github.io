@@ -115,6 +115,7 @@ class RamNet {
 	#maxBlockSize = 0; // The size of the largest block on the network.
 	#totalRam = 0; // The total ram available on the network.
 	#maxRam = 0; // The maximum ram that the network can support.
+  	#prepThreads = 0; // Used for the prep function
 	#index = new Map(); // An index for accessing memory blocks by server. More on this later.
 
 	// We feed the RamNet a list of servers to turn into useful data.
@@ -132,6 +133,7 @@ class RamNet {
 					if (ram > this.#maxBlockSize) this.#maxBlockSize = ram;
 					this.#totalRam += ram;
 					this.#maxRam += maxRam;
+         				this.#prepThreads += Math.floor(ram / 1.75);
 				}
 			}
 		}
@@ -179,6 +181,10 @@ class RamNet {
 	get maxBlockSize() {
 		return this.#maxBlockSize;
 	}
+
+	get prepThreads() {
+    		return this.#prepThreads;
+  	}
 
 	// When assigning a job, we find a block that can fit it and set its server to that block.
 	// Then we reduce the available ram to reserve it for that job.
