@@ -329,8 +329,9 @@ export async function main(ns) {
 
 	// Then we just deploy each of them. The only argument the workers get is a serialized version of the Job object.
 	// Workers themselves will parse the JSON and use that data for their own calculations. See the worker scripts for details.
+	// Worker scripts are made temporary so they aren't included in saves. This is to prevent a whole host of technical issues and speed up saving.
 	for (const job of batch) {
-		ns.exec(SCRIPTS[job.type], job.server, job.threads, JSON.stringify(job));
+		ns.exec(SCRIPTS[job.type], job.server, { threads: job.threads, temporary: true }, JSON.stringify(job));
 	}
 
 	// This is just some fancy UI stuff to give you feedback when you run the script.
