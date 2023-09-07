@@ -369,7 +369,7 @@ export async function prep(ns, values, ramNet) {
 					gThreads = 0;
 				} else break;
 				metrics.server = block.server;
-				const pid = ns.exec(script, block.server, threads, JSON.stringify(metrics));
+				const pid = ns.exec(script, block.server, { threads: threads, temporary: true }, JSON.stringify(metrics));
 				if (!pid) throw new Error("Unable to assign all jobs.");
 				block.ram -= 1.75 * threads;
 			}
