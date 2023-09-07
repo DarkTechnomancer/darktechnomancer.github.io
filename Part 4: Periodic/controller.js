@@ -87,7 +87,7 @@ class ContinuousBatcher {
 		while (!this.#schedule.isEmpty()) {
 			const job = this.#schedule.shift();
 			job.end += this.#metrics.delay;
-			const jobPid = this.#ns.exec(SCRIPTS[job.type], job.server, job.threads, JSON.stringify(job));
+			const jobPid = this.#ns.exec(SCRIPTS[job.type], job.server, { threads: job.threads, temporary: true }, JSON.stringify(job));
 			if (!jobPid) throw new Error(`Unable to deploy ${job.type}`);
 			const tPort = this.#ns.getPortHandle(jobPid);
 
