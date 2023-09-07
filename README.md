@@ -150,7 +150,7 @@ That's it. It's all flat values. One weaken will counteract 25 hacks or 12.5 gro
     ns.hackAnalyzeSecurity(threads, target);
     ns.growthAnalyzeSecurity(threads, target);
     
-It's a waste of RAM to use them, but I've included them here for completeness and because that waste really is trivial.
+It's usually a waste of RAM to use them, but I've included them here since they can protect you from (very unlikely) breaking changes to the game, and also because there are some very late game situations where they might come up.
 
 **Note:** Due to floating point math, sometimes the actual security value will end up being off by some absurdly trivial number. To correct this, you'll need to allow a threshold of +- 0.0001 when checking security.
 
