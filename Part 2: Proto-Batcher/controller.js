@@ -67,7 +67,7 @@ export async function main(ns) {
 		// We do a bit more during deployment now.
 		for (const job of batch) {
 			job.end += metrics.delay;
-			const jobPid = ns.exec(SCRIPTS[job.type], job.server, job.threads, JSON.stringify(job));
+			const jobPid = ns.exec(SCRIPTS[job.type], job.server, { threads: job.threads, temporary: true }, JSON.stringify(job));
 			if (!jobPid) throw new Error(`Unable to deploy ${job.type}`); // If the exec fails for any reason, error out.
 			/*
 			If a worker deploys late, it will communicate back how late it was, so that the other scripts can adjust.

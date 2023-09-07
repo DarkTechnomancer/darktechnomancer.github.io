@@ -89,7 +89,7 @@ export async function main(ns) {
 		*/
 		for (const job of jobs) {
 			job.end += metrics.delay;
-			const jobPid = ns.exec(SCRIPTS[job.type], job.server, job.threads, JSON.stringify(job));
+			const jobPid = ns.exec(SCRIPTS[job.type], job.server, { threads: job.threads, temporary: true }, JSON.stringify(job));
 			if (!jobPid) throw new Error(`Unable to deploy ${job.type}`);
 			const tPort = ns.getPortHandle(jobPid);
 			await tPort.nextWrite();
