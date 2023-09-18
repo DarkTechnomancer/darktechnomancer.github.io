@@ -50,7 +50,40 @@ There's a lot of jargon that gets thrown around that can be confusing to beginne
  - **Continuous**: Batchers that run at a steady rate. Basically, not a shotgun.
  - **Periodic**: A continuous scheduling method that deploys batches at set intervals.
  - **JIT/Just-In-Time**: A continuous scheduling method that dynamically deploys tasks as needed according to programmed logic.
- 
+
+### A Visual Aid
+
+If the above is still confusing, then I have this ascii diagram which attempts to visualize and compare different hacking strategies.
+
+**Naive hacking:**
+```
+[Hack-][------Weaken--------][-----Grow-------][------Weaken--------]
+```
+**A Batch:**
+```
+              [Hack-]
+[------Weaken--------]
+     [-----Grow-------]
+  [------Weaken--------]
+```
+**Proto-batcher:**
+```
+[Batch][Batch][Batch][Batch]
+```
+**Shotgun batcher:**
+```
+[Batch]
+[-Batch]
+[-Batch-]
+[-Batch--]
+```
+**Continuous batcher:**
+```
+[Batch]
+ [Batch]
+  [Batch]
+   [Batch]
+```
 ### Where to Begin
 It can be a pretty daunting task to make a batcher. There are a lot of factors that interact with each other, some of which are obvious and easy to predict, some of which are impossible to anticipate without forewarning or intimate knowledge of the inner workings of the game. For now, let's just take things one step at a time. First a checklist of things you need (and a few special mentions regarding things you *don't* need). Based loosely on a helpful discord message from Thatman:
 #### Things you need:
