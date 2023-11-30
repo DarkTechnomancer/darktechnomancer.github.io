@@ -189,7 +189,7 @@ It's usually a waste of RAM to use them, but I've included them here since they 
 
     weakenAnalyze(threads, cores);
     
-Okay, so actually there is a special case. When running weaken from your home console, the effectiveness is improved by cores. In that case, you'll want to use this to determine the number of threads, but just remember that you should only factor in cores if you *know* that your tasks are going to be executed there.
+Okay, so actually there is a special case. When running weaken from your home server, the effectiveness is improved by cores. In that case, you'll want to use this to determine the number of threads, but just remember that you should only factor in cores if you *know* that your tasks are going to be executed there.
 
 #### Formulas functions
 While it's not strictly necessary, Formulas.exe *is* incredibly powerful, and so I'll take a moment to quickly go over the most relevant functions and what they can do for you. Aside from the `growThreads` already mentioned there's:
